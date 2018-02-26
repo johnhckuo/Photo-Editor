@@ -1,0 +1,18 @@
+@mixin flex-center{
+	display:flex;
+	align-items: center;
+	justify-content: center;
+}
+
+body{
+	@include flex-center;
+	overflow-y: scroll;
+}
+
+#container{
+	display:flex;
+	width: 90vw;
+	height: 100vh;
+	align-items: center;
+	flex-direction: column;
+}
