@@ -3,6 +3,7 @@ import '../scss/main.scss';
 
 import Jcrop from "jquery-jcrop"
 import swal from 'sweetalert2'
+import firebase from "firebase"
 // import champ_img from "../images/champ.png";
 // import draw_img from "../images/draw.png";
 // import welcome_img from "../images/welcome.png";
@@ -16,6 +17,64 @@ var context;
 var image;
 
 var prefsize;
+
+init();
+
+function init(){
+	var config = {
+	    apiKey: "AIzaSyDGH1msoXnr-xzW-hKLCMyXxaa6B9nRjAk",
+	    authDomain: "imageditor-54955.firebaseapp.com",
+	    databaseURL: "https://imageditor-54955.firebaseio.com",
+	    projectId: "imageditor-54955",
+	    storageBucket: "imageditor-54955.appspot.com",
+	    messagingSenderId: "128661984266"
+	  };
+	firebase.initializeApp(config);
+}
+
+function firebaseUpload(file){
+	var storage = firebase.storage();
+	var storageRef = storage.ref();
+	var imagesRef = storageRef.child('images/user.png');
+
+	var uploadTask = imagesRef.put(file, { contentType: 'image/png' });
+	uploadTask.then(function(snapshot) {
+	  console.log('Uploaded a blob or file!');
+	});
+
+
+	uploadTask.on('state_changed', function(snapshot){
+
+	  var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+	  console.log('Upload is ' + progress + '% done');
+	  switch (snapshot.state) {
+	    case firebase.storage.TaskState.PAUSED: // or 'paused'
+	      console.log('Upload is paused');
+	      break;
+	    case firebase.storage.TaskState.RUNNING: // or 'running'
+	      console.log('Upload is running');
+	      break;
+	  }
+	}, function(error) {
+
+	  switch (error.code) {
+	    case 'storage/unauthorized':
+	      // User doesn't have permission to access the object
+	      break;
+
+	    case 'storage/canceled':
+	      // User canceled the upload
+	      break;
+
+	    case 'storage/unknown':
+	      // Unknown error occurred, inspect error.serverResponse
+	      break;
+	  }
+	}, function() {
+	  // Upload completed successfully, now we can get the download URL
+	  var downloadURL = uploadTask.snapshot.downloadURL;
+	});
+}
 
 $("#file").change(function() {
   loadImage(this);
@@ -167,23 +226,9 @@ $("#vflipbutton").click(function(e) {
 
 $("#form").submit(function(e) {
   e.preventDefault();
-  formData = new FormData($(this)[0]);
+  var formData = new FormData($(this)[0]);
   var blob = dataURLtoBlob(canvas.toDataURL('image/png'));
   //---Add file blob to the form data
   formData.append("cropped_image[]", blob);
-  $.ajax({
-    url: "whatever.php",
-    type: "POST",
-    data: formData,
-    contentType: false,
-    cache: false,
-    processData: false,
-    success: function(data) {
-      alert("Success");
-    },
-    error: function(data) {
-      alert("Error");
-    },
-    complete: function(data) {}
-  });
+  firebaseUpload(blob);
 });
