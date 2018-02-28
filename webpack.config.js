@@ -51,6 +51,7 @@ module.exports = {
       			})
       	},
         {test: /\.png$/, use: 'url-loader?mimetype=image/png'},
+        {test: /\.js$/, exclude: /node_modules/, loader: "babel-loader" }
     ]
   }
 };

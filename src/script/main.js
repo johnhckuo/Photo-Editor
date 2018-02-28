@@ -4,6 +4,9 @@ import '../scss/main.scss';
 import Jcrop from "jquery-jcrop"
 import swal from 'sweetalert2'
 import firebase from "firebase"
+
+import Filter from "./Filter"
+
 // import champ_img from "../images/champ.png";
 // import draw_img from "../images/draw.png";
 // import welcome_img from "../images/welcome.png";
@@ -146,6 +149,14 @@ function restartJcrop() {
     jcrop_api = this;
   });
   clearcanvas();
+	Filter.init();
+	setTimeout(function(){
+		Filter.curves([[0,1], [1,0]] , [[0,1], [1,0]] , [[0,1], [1,0]] );
+
+		Filter.sepia(1);
+
+	}, 1000)
+
 }
 
 function clearcanvas() {
