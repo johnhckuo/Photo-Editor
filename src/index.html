@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Photo Uploader</title>
-  </head>
-  <body>
-	<div id ="app"></div>
-  </body>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Photo-Editor</title>
+</head>
+<body>
+	<form id="form">
+	  <h1>Client-side image-editor and uploader</h1>
+	  <h2>Image file select</h2>
+	  <input id="file" type="file" />
+	  <h2>Image cropper (Jcrop)</h2>
+	  <button id="cropbutton" type="button">Crop</button>
+	  <button id="scalebutton" type="button">Scale</button>
+	  <button id="rotatebutton" type="button">Rotate</button>
+	  <button id="hflipbutton" type="button">H-flip</button>
+	  <button id="vflipbutton" type="button">V-flip</button>
+	  <br>
+	  <div id="views"></div>
+	  <h2>Submit form</h2>
+	  <input type="submit" value="Upload form data and image" />
+	</form>
+
+</body>
 </html>

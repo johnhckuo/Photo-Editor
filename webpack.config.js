@@ -1,4 +1,3 @@
-var path = require('path');
 var Webpack = require("webpack");
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -9,12 +8,18 @@ var extractPlugin = new ExtractTextPlugin({
 });
 
 module.exports = {
-  entry: path.join(__dirname, 'src', 'script', 'main.js'),
+  entry: [__dirname+'/src/script/main.js'],
   output: {
-    path: path.join(__dirname, 'docs'),
+    path: __dirname +'/docs',
     filename: 'bundle.js'
   },
   plugins: [
+    new Webpack.ProvidePlugin({
+        $: 'jquery',
+        jQuery: 'jquery',
+        'window.jQuery': 'jquery',
+        'root.jQuery': 'jquery'
+    }),
     new HtmlWebpackPlugin({
       template: 'src/index.html'
     }),
@@ -24,16 +29,8 @@ module.exports = {
   module: {
     loaders: [
         {
-          test: /\.(gif|png|jpe?g|svg)$/i,
-          use: [
-            'file-loader',
-            {
-              loader: 'image-webpack-loader',
-              options: {
-                bypassOnDebug: true,
-              },
-            },
-          ],
+            test: require.resolve('sweetalert2'),
+            loader: 'imports?window=>{}!exports?window.swal'
         }
     ],
     rules: [
@@ -53,9 +50,7 @@ module.exports = {
       			    ]
       			})
       	},
-        {test: /\.jpg$/, use: 'url-loader?mimetype=image/jpg'},
         {test: /\.png$/, use: 'url-loader?mimetype=image/png'},
-        { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader" }
-    ],
+    ]
   }
 };
