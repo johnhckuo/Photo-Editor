@@ -7,17 +7,13 @@ import firebase from "firebase"
 
 import Filter from "./Filter"
 
-// import champ_img from "../images/champ.png";
-// import draw_img from "../images/draw.png";
-// import welcome_img from "../images/welcome.png";
-// import background from "../images/background.png";
-
-var crop_max_width = 400;
-var crop_max_height = 400;
+var crop_max_width = window.innerWidth * 0.5;
+var crop_max_height = window.innerHeight * 0.5;
 var jcrop_api;
 var canvas;
 var context;
-var image;
+var image, originalImage;
+var filter_edited = false;
 
 var prefsize;
 
@@ -33,6 +29,7 @@ function init(){
 	    messagingSenderId: "128661984266"
 	  };
 	firebase.initializeApp(config);
+
 }
 
 function firebaseUpload(file){
@@ -40,16 +37,16 @@ function firebaseUpload(file){
 	var storageRef = storage.ref();
 	var imagesRef = storageRef.child('images/user.png');
 
-	var uploadTask = imagesRef.put(file, { contentType: 'image/png' });
+	var uploadTask = imagesRef.put(file);
 	uploadTask.then(function(snapshot) {
-	  console.log('Uploaded a blob or file!');
+		swal("Upload Complete", "success");
 	});
 
 
 	uploadTask.on('state_changed', function(snapshot){
 
 	  var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-	  console.log('Upload is ' + progress + '% done');
+		document.getElementById("upload_text").value = 'Upload is ' + Math.round(progress) + '% done';
 	  switch (snapshot.state) {
 	    case firebase.storage.TaskState.PAUSED: // or 'paused'
 	      console.log('Upload is paused');
@@ -79,9 +76,16 @@ function firebaseUpload(file){
 	});
 }
 
-$("#file").change(function() {
-  loadImage(this);
-});
+document.getElementById("file").addEventListener("change", function(e){
+	loadImage(this);
+}, false);
+
+function recacheImage(){
+	if (!filter_edited){
+		validateImage();
+		filter_edited = true;
+	}
+}
 
 function loadImage(input) {
   if (input.files && input.files[0]) {
@@ -125,21 +129,37 @@ function validateImage() {
   if (canvas != null) {
     image = new Image();
     image.onload = restartJcrop;
-    image.src = canvas.toDataURL('image/png');
+    image.src = canvas.toDataURL();
   } else restartJcrop();
 }
 
 function restartJcrop() {
-  if (jcrop_api != null) {
-    jcrop_api.destroy();
-  }
-  $("#views").empty();
-  $("#views").append("<canvas id=\"canvas\">");
-  canvas = $("#canvas")[0];
+
+	showAdvancePanel();
+
+	var views = document.getElementById("views");
+	while (views.firstChild){
+		document.getElementById("views").removeChild(views.firstChild);
+	}
+	var canvasElem = document.createElement("canvas");
+	canvasElem.id = "canvas";
+  views.appendChild(canvasElem);
+  canvas = canvasElem;
   context = canvas.getContext("2d");
+
   canvas.width = image.width;
   canvas.height = image.height;
   context.drawImage(image, 0, 0);
+
+	if (jcrop_api != null) {
+		jcrop_api.destroy();
+		Filter.image = image;
+		Filter.context = context;
+	}else{
+		Filter.init(context, image);
+		originalImage = image;
+	}
+
   $("#canvas").Jcrop({
     onSelect: selectcanvas,
     onRelease: clearcanvas,
@@ -149,7 +169,11 @@ function restartJcrop() {
     jcrop_api = this;
   });
   clearcanvas();
+}
 
+function showAdvancePanel(){
+	$(".advance_panel").fadeIn();
+	$(".initial_panel").fadeOut();
 }
 
 function clearcanvas() {
@@ -171,8 +195,7 @@ function selectcanvas(coords) {
 }
 
 function applyCrop() {
-  canvas.width = prefsize.w;
-  canvas.height = prefsize.h;
+	reapplyFilter();
   context.drawImage(image, prefsize.x, prefsize.y, prefsize.w, prefsize.h, 0, 0, canvas.width, canvas.height);
   validateImage();
 }
@@ -181,24 +204,27 @@ function applyScale(scale) {
   if (scale == 1) return;
   canvas.width = canvas.width * scale;
   canvas.height = canvas.height * scale;
+	reapplyFilter();
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   validateImage();
 }
 
 function applyRotate() {
-  canvas.width = image.height;
+	canvas.width = image.height;
   canvas.height = image.width;
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.translate(image.height / 2, image.width / 2);
   context.rotate(Math.PI / 2);
+	reapplyFilter();
   context.drawImage(image, -image.width / 2, -image.height / 2);
   validateImage();
 }
 
 function applyHflip() {
-  context.clearRect(0, 0, canvas.width, canvas.height);
+	context.clearRect(0, 0, canvas.width, canvas.height);
   context.translate(image.width, 0);
   context.scale(-1, 1);
+	reapplyFilter();
   context.drawImage(image, 0, 0);
   validateImage();
 }
@@ -207,40 +233,107 @@ function applyVflip() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.translate(0, image.height);
   context.scale(1, -1);
+	reapplyFilter();
   context.drawImage(image, 0, 0);
   validateImage();
 }
 
-$("#cropbutton").click(function(e) {
-  	applyCrop();
-});
-$("#scalebutton").click(function(e) {
-  	var scale = prompt("Scale Factor:", "1");
-  	applyScale(scale);
-});
-$("#rotatebutton").click(function(e) {
-  	applyRotate();
-});
-$("#hflipbutton").click(function(e) {
-  	applyHflip();
-});
-$("#vflipbutton").click(function(e) {
-  	applyVflip();
-});
+function reapplyFilter(){
 
-$("#blur").click(function(e){
-	Filter.blur(5, context, image);
-})
+	if (!filter_edited){
+		return;
+	}
 
-$("#grayscale").click(function(e){
-	Filter.grayscale(100, context, image);
-})
+	filter_edited = false;
+	var sum = "";
+	for (var key in Filter.style) {
+		 if (Filter.style.hasOwnProperty(key)) {
+				sum += Filter.style[key] + " ";
+		 }
+	}
+	context.filter = sum;
+}
 
-$("#form").submit(function(e) {
-  e.preventDefault();
-  var formData = new FormData($(this)[0]);
-  var blob = dataURLtoBlob(canvas.toDataURL('image/png'));
+document.getElementById("crop").addEventListener("click", function(e){
+	applyCrop();
+}, false);
+
+document.getElementById("scale").addEventListener("click", function(e){
+	var scale = prompt("Scale Factor:", "1");
+	applyScale(scale);
+}, false);
+
+document.getElementById("rotate").addEventListener("click", function(e){
+	applyRotate();
+}, false);
+
+document.getElementById("hflip").addEventListener("click", function(e){
+	applyHflip();
+}, false);
+
+document.getElementById("vflip").addEventListener("click", function(e){
+	applyVflip();
+}, false);
+
+document.getElementById("blur").addEventListener("input", function(e){
+	recacheImage();
+	Filter.blur(e.target.value);
+}, false);
+
+document.getElementById("grayscale").addEventListener("input", function(e){
+	recacheImage();
+	Filter.grayscale(e.target.value);
+}, false);
+
+document.getElementById("sepia").addEventListener("input", function(e){
+	recacheImage();
+	Filter.sepia(e.target.value);
+}, false);
+
+document.getElementById("saturate").addEventListener("input", function(e){
+	recacheImage();
+	Filter.saturate(e.target.value);
+}, false);
+
+document.getElementById("hue_rotate").addEventListener("input", function(e){
+	recacheImage();
+	Filter.hue_rotate(e.target.value);
+}, false);
+
+document.getElementById("invert").addEventListener("input", function(e){
+	recacheImage();
+	Filter.invert(e.target.value);
+}, false);
+
+document.getElementById("opacity").addEventListener("input", function(e){
+	recacheImage();
+	Filter.opacity(e.target.value);
+}, false);
+
+document.getElementById("brightness").addEventListener("input", function(e){
+	recacheImage();
+	Filter.brightness(e.target.value);
+}, false);
+
+document.getElementById("contrast").addEventListener("input", function(e){
+	recacheImage();
+	Filter.contrast(e.target.value);
+}, false);
+
+document.getElementById("reset").addEventListener("click", function(e){
+	Filter.reset();
+	Filter.init(context, image);
+	jcrop_api = null;
+	image = originalImage;
+	restartJcrop();
+	filter_edited = false;
+}, false);
+
+document.getElementById("form").addEventListener("submit", function(e){
+	e.preventDefault();
+  var formData = new FormData(document.getElementById("form"));
+  var blob = dataURLtoBlob(canvas.toDataURL());
   //---Add file blob to the form data
   formData.append("cropped_image[]", blob);
   firebaseUpload(blob);
-});
+}, false);
