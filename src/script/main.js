@@ -32,21 +32,35 @@ function init(){
 
 }
 
+
+function getDate() {
+	var date = new Date();
+
+	var mm = date.getMonth() + 1; // getMonth() is zero-based
+	var dd = date.getDate();
+	var hh = date.getHours();
+	var minute = date.getMinutes();
+	var ss = date.getSeconds();
+
+	return [date.getFullYear(),
+					(mm>9 ? '' : '0') + mm,
+					(dd>9 ? '' : '0') + dd,
+					(hh>9 ? '' : '0') + hh,
+					(minute>9 ? '' : '0') + minute,
+					(ss>9 ? '' : '0') + ss
+				 ].join('');
+};
+
 function firebaseUpload(file){
 	var storage = firebase.storage();
 	var storageRef = storage.ref();
-	var imagesRef = storageRef.child('images/user.png');
-
+	var imagesRef = storageRef.child('images/' + getDate() + '.png');
 	var uploadTask = imagesRef.put(file);
-	uploadTask.then(function(snapshot) {
-		swal("Upload Complete", "success");
-	});
-
 
 	uploadTask.on('state_changed', function(snapshot){
 
 	  var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-		document.getElementById("upload_text").value = 'Upload is ' + Math.round(progress) + '% done';
+		document.getElementById("upload_text").innerHTML = 'Upload is ' + Math.round(progress) + '% done';
 	  switch (snapshot.state) {
 	    case firebase.storage.TaskState.PAUSED: // or 'paused'
 	      console.log('Upload is paused');
@@ -73,6 +87,8 @@ function firebaseUpload(file){
 	}, function() {
 	  // Upload completed successfully, now we can get the download URL
 	  var downloadURL = uploadTask.snapshot.downloadURL;
+		swal("Upload Complete", "Your image URL is: " + downloadURL,  "success");
+
 	});
 }
 

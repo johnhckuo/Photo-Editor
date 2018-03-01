@@ -59,6 +59,9 @@ label:hover{
 
 
 .control_buttons{
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 80vw;
 }
 
