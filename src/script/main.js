@@ -149,13 +149,6 @@ function restartJcrop() {
     jcrop_api = this;
   });
   clearcanvas();
-	Filter.init();
-	setTimeout(function(){
-		Filter.curves([[0,1], [1,0]] , [[0,1], [1,0]] , [[0,1], [1,0]] );
-
-		Filter.sepia(1);
-
-	}, 1000)
 
 }
 
@@ -219,21 +212,29 @@ function applyVflip() {
 }
 
 $("#cropbutton").click(function(e) {
-  applyCrop();
+  	applyCrop();
 });
 $("#scalebutton").click(function(e) {
-  var scale = prompt("Scale Factor:", "1");
-  applyScale(scale);
+  	var scale = prompt("Scale Factor:", "1");
+  	applyScale(scale);
 });
 $("#rotatebutton").click(function(e) {
-  applyRotate();
+  	applyRotate();
 });
 $("#hflipbutton").click(function(e) {
-  applyHflip();
+  	applyHflip();
 });
 $("#vflipbutton").click(function(e) {
-  applyVflip();
+  	applyVflip();
 });
+
+$("#blur").click(function(e){
+	Filter.blur(5, context, image);
+})
+
+$("#grayscale").click(function(e){
+	Filter.grayscale(100, context, image);
+})
 
 $("#form").submit(function(e) {
   e.preventDefault();

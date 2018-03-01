@@ -2,9 +2,26 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Gomoku</title>
+	<title>Photo-Editor</title>
 <link href="bundle.css" rel="stylesheet"></head>
 <body>
-	
+	<form id="form">
+	  <h1>Image Editor</h1>
+	  <h2>Image file select</h2>
+	  <input id="file" type="file" />
+	  <hr>
+	  <button id="cropbutton" type="button">Crop</button>
+	  <button id="scalebutton" type="button">Scale</button>
+	  <button id="rotatebutton" type="button">Rotate</button>
+	  <button id="hflipbutton" type="button">H-flip</button>
+	  <button id="vflipbutton" type="button">V-flip</button>
+	  <br>
+	  <button id="blur" type="button">Blur</button>
+	  <button id="grayscale" type="button">GrayScale</button>
+	  <div id="views"></div>
+		<hr>
+	  <input type="submit" value="Upload edited image" />
+	</form>
+
 <script type="text/javascript" src="bundle.js"></script></body>
 </html>
