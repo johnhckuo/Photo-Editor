@@ -178,10 +178,6 @@ function showAdvancePanel(){
 	$(".initial_panel").fadeOut();
 }
 
-
-
-
-
 document.getElementById("crop").addEventListener("click", function(e){
 	ImageEditor.Editor.applyCrop();
 	validateImage();

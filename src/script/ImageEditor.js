@@ -144,7 +144,6 @@ var ImageEditor = {
       if (!ImageEditor.filter_edited){
         return;
       }
-
       ImageEditor.filter_edited = false;
       var sum = "";
       for (var key in ImageEditor.Filter.style) {
