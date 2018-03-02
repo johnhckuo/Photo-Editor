@@ -13,3 +13,10 @@ npm install
 
 # build and run locally
 npm run dev
+```
+
+## Powered by
+- [GitHub Pages](https://pages.github.com/)
+- [Sweet Alert](https://sweetalert.js.org/)
+- [Firebase](https://firebase.google.com/)
+- [JCrop](https://github.com/tapmodo/Jcrop)
