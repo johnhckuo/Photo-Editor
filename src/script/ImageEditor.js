@@ -108,8 +108,10 @@ var ImageEditor = {
 
     applyScale: function(scale) {
       if (scale == 1) return;
-      ImageEditor.canvas.width = ImageEditor.canvas.width * scale;
-      ImageEditor.canvas.height = ImageEditor.canvas.height * scale;
+
+      ImageEditor.context.clearRect(0, 0, ImageEditor.canvas.width, ImageEditor.canvas.height);
+      ImageEditor.canvas.width = ImageEditor.image.width * scale;
+      ImageEditor.canvas.height = ImageEditor.image.height * scale;
       ImageEditor.Editor.reapplyFilter();
       ImageEditor.context.drawImage(ImageEditor.image, 0, 0, ImageEditor.canvas.width, ImageEditor.canvas.height);
     },
